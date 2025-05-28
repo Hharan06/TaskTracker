@@ -45,4 +45,11 @@ public class NotificationController {
         User user = getUserFromRequest(request);
         notificationService.markAsRead(id, user);
     }
+
+    @DeleteMapping("/{id}")
+    public void deleteNotification(@PathVariable Long id, HttpServletRequest request) {
+        User user = getUserFromRequest(request);
+        notificationService.deleteNotification(id, user);
+    }
+
 }
