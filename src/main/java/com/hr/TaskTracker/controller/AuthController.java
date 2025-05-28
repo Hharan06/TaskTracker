@@ -1,15 +1,14 @@
 package com.hr.TaskTracker.controller;
 
-import com.hr.TaskTracker.dto.LoginDTO;
-import com.hr.TaskTracker.dto.RegistrationDTO;
 import com.hr.TaskTracker.model.User;
 import com.hr.TaskTracker.repository.UserRepository;
 import com.hr.TaskTracker.security.JwtUtil;
-import jakarta.validation.Valid;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.*;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -31,31 +30,27 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public String register(@Valid @RequestBody RegistrationDTO registrationDTO) {
-        if (userRepository.existsByUsername(registrationDTO.getUsername())) {
-            return "Username already exists!";
-        }
-        if (userRepository.existsByEmail(registrationDTO.getEmail())) {
-            return "Email already exists!";
-        }
-        User user = new User();
-        user.setUsername(registrationDTO.getUsername());
-        user.setEmail(registrationDTO.getEmail());
-        user.setPassword(passwordEncoder.encode(registrationDTO.getPassword()));
+    public String register(@RequestBody User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
         return "User registered successfully!";
     }
 
     @PostMapping("/login")
-    public String login(@Valid @RequestBody LoginDTO loginDTO) {
+    public String login(@RequestBody Map<String, String> loginData) {
+        // Authenticate using username/password
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        loginDTO.getUsername(),
-                        loginDTO.getPassword()
+                        loginData.get("username"),
+                        loginData.get("password")
                 )
         );
-        User user = userRepository.findByUsername(loginDTO.getUsername())
+
+        // Fetch user to get ID after successful authentication
+        User user = userRepository.findByUsername(loginData.get("username"))
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Generate token with user ID
         return jwtUtil.generateToken(user.getId());
     }
 }
