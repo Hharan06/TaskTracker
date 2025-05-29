@@ -79,7 +79,7 @@ function ProfilePage({ token, onLogout }) {
       </nav>
 
       {/* Profile Card */}
-      <div className="container min-vh-100 d-flex justify-content-center align-items-center">
+      <div className="container min-vh-100 d-flex justify-content-center mt-5">
         <div className="row w-100">
           <div className="col-md-6 col-lg-4 mx-auto">
             <div className="card shadow-sm">
@@ -93,9 +93,6 @@ function ProfilePage({ token, onLogout }) {
                 )}
                 {user && (
                   <ul className="list-group list-group-flush">
-                    <li className="list-group-item">
-                      <strong>User ID:</strong> {user.id}
-                    </li>
                     <li className="list-group-item">
                       <strong>Username:</strong> {user.username}
                     </li>

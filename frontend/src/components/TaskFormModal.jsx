@@ -1,6 +1,8 @@
 import React from 'react';
 import axios from 'axios';
 import './TaskList.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 
 const TaskFormModal = ({
                            showAddForm,
@@ -99,7 +101,10 @@ const TaskFormModal = ({
                         onClick={() => setShowStartPicker(!showStartPicker)}
                         type="button"
                     >
-                        {newTask.startDateTime || 'Select start date & time'}
+                        {newTask.startDateTime
+                            ? `${new Date(newTask.startDateTime).toLocaleDateString()} @ ${new Date(newTask.startDateTime).toLocaleTimeString()}`
+                            : 'Select start date & time'}
+
                     </button>
                     {showStartPicker && (
                         <input
@@ -109,10 +114,11 @@ const TaskFormModal = ({
                         />
                     )}
                 </div>
-                <div className="form-group">
-                    <label>Enable Due Date</label>
+                <div className="form-check form-switch mb-3">
                     <input
+                        className="form-check-input"
                         type="checkbox"
+                        id="enableDueDateSwitch"
                         checked={enableDueDate}
                         onChange={e => {
                             setEnableDueDate(e.target.checked);
@@ -121,7 +127,11 @@ const TaskFormModal = ({
                             }
                         }}
                     />
+                    <label className="form-check-label" htmlFor="enableDueDateSwitch">
+                        Enable Due Date
+                    </label>
                 </div>
+
                 {enableDueDate && (
                     <div className="form-group">
                         <label>Due Date & Time</label>
@@ -130,7 +140,9 @@ const TaskFormModal = ({
                             onClick={() => setShowDuePicker(!showDuePicker)}
                             type="button"
                         >
-                            {newTask.dueDateTime || 'Select due date & time'}
+                            {newTask.dueDateTime
+                                ? `${new Date(newTask.dueDateTime).toLocaleDateString()} @ ${new Date(newTask.dueDateTime).toLocaleTimeString()}`
+                                : 'Select start date & time'}
                         </button>
                         {showDuePicker && (
                             <input

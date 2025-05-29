@@ -62,7 +62,7 @@ public class NotificationService {
         log.info("Scheduling notification: {} | Added to Redis: {}", payload, added);
     }
 
-    @Scheduled(fixedRate = 3000)
+    @Scheduled(fixedRate = 60000)
     public void processDueNotifications() {
         long now = System.currentTimeMillis();
         ZSetOperations<String, Object> zSetOps = redisTemplate.opsForZSet();
@@ -93,7 +93,6 @@ public class NotificationService {
                         .build();
 
                 notificationRepository.save(notification);
-
 
                 zSetOps.remove(NOTIFICATION_QUEUE, obj);
                 log.info("Processed and removed notification: {}", payload);
