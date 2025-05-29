@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import NotificationDropdown from "./NotificationDropdown"; // Import the dropdown
+import NotificationDropdown from "./NotificationDropdown";
 
 function HomePage({ onLogout }) {
   return (
@@ -21,10 +21,13 @@ function HomePage({ onLogout }) {
               <li className="nav-item">
                 <Link className="nav-link" to="/profile">Profile</Link>
               </li>
+              <li className="nav-item">
+                <Link className="nav-link" to="/tasks">Tasks</Link>
+              </li>
+
               {/* Add more nav items as needed */}
             </ul>
-            {/* Notification Dropdown */}
-            <NotificationDropdown />
+            <NotificationDropdown/>
             <button onClick={onLogout} className="btn btn-outline-danger ms-lg-3 mt-2 mt-lg-0">Logout</button>
           </div>
         </div>

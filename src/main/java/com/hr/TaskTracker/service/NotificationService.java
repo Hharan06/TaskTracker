@@ -4,6 +4,8 @@ import com.hr.TaskTracker.model.Notification;
 import com.hr.TaskTracker.model.Task;
 import com.hr.TaskTracker.model.User;
 import com.hr.TaskTracker.repository.NotificationRepository;
+import com.hr.TaskTracker.repository.TaskRepository;
+import com.hr.TaskTracker.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -29,6 +31,13 @@ public class NotificationService {
     private RedisTemplate<String, Object> redisTemplate;
 
     @Autowired
+    private TaskRepository taskRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+
+    @Autowired
     private NotificationRepository notificationRepository;
 
     public void scheduleNotification(Task task) {
@@ -44,7 +53,7 @@ public class NotificationService {
                 .toEpochMilli();
 
         NotificationPayload payload = new NotificationPayload(
-                task.getUser().getId(),
+                task.getUser().getUser_id(),
                 task.getTask_id(),
                 task.getTitle()
         );
@@ -68,9 +77,15 @@ public class NotificationService {
                     continue;
                 }
 
+                Task task = taskRepository.findById(payload.getTaskId())
+                        .orElseThrow(() -> new RuntimeException("Task not found"));
+
+                User user = userRepository.findById(payload.getUserId())
+                        .orElseThrow(() -> new RuntimeException("User not found"));
+
                 Notification notification = Notification.builder()
-                        .user(User.builder().id(payload.getUserId()).build())
-                        .task(Task.builder().task_id(payload.getTaskId()).build())
+                        .user(user)
+                        .task(task)
                         .title("Upcoming Task")
                         .message("You have an upcoming task: " + payload.getTaskTitle())
                         .isRead(false)
@@ -78,6 +93,7 @@ public class NotificationService {
                         .build();
 
                 notificationRepository.save(notification);
+
 
                 zSetOps.remove(NOTIFICATION_QUEUE, obj);
                 log.info("Processed and removed notification: {}", payload);
@@ -106,27 +122,31 @@ public class NotificationService {
         return notificationRepository.findByUserAndIsReadFalse(user);
     }
 
-    public void deleteNotification(Long notificationId, User user) {
-        Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new RuntimeException("Notification not found"));
-
-        if (!notification.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Unauthorized");
-        }
-        notificationRepository.delete(notification);
-    }
-
-
     public void markAsRead(Long notificationId, User user) {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
 
-        if (!notification.getUser().getId().equals(user.getId())) {
+        if (!notification.getUser().getUser_id().equals(user.getUser_id())) {
             throw new RuntimeException("Unauthorized");
         }
 
         notification.setIsRead(true);
         notificationRepository.save(notification);
+    }
+
+    public void deleteNotification(Task task) {
+        ZSetOperations<String, Object> zSetOps = redisTemplate.opsForZSet();
+        Set<Object> allNotifications = zSetOps.range(NOTIFICATION_QUEUE, 0, -1);
+
+        if (allNotifications != null) {
+            for (Object obj : allNotifications) {
+                NotificationPayload payload = convertToPayload(obj);
+                if (payload != null && payload.getTaskId().equals(task.getTask_id())) {
+                    zSetOps.remove(NOTIFICATION_QUEUE, obj);
+                    log.info("Removed scheduled notification for task ID {} from Redis ZSet.", task.getTask_id());
+                }
+            }
+        }
     }
 
     @Data

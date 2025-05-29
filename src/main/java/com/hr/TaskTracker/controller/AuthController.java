@@ -51,6 +51,6 @@ public class AuthController {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Generate token with user ID
-        return jwtUtil.generateToken(user.getId());
+        return jwtUtil.generateToken(user.getUser_id());
     }
 }

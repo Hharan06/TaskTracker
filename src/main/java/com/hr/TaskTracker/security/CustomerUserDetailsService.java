@@ -23,7 +23,7 @@ public class CustomerUserDetailsService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         return new CustomUserDetails(
-                user.getId(),
+                user.getUser_id(),
                 user.getUsername(),
                 user.getPassword(),
                 new ArrayList<>()

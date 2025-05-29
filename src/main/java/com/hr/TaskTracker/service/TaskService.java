@@ -8,6 +8,8 @@ import com.hr.TaskTracker.security.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.hr.TaskTracker.repository.NotificationRepository;
+import com.hr.TaskTracker.service.NotificationService;
 
 import java.util.List;
 
@@ -21,10 +23,13 @@ public class TaskService {
     private UserRepository userRepository;
 
     @Autowired
+    private NotificationRepository notificationRepository;
+
+    @Autowired
     private JwtUtil jwtUtil;
 
     @Autowired
-    private NotificationService notificationService; // NEW: NotificationService injection
+    private NotificationService notificationService;
 
     private User getUserFromRequest(HttpServletRequest request) {
         String token = request.getHeader("Authorization").substring(7);
@@ -32,6 +37,7 @@ public class TaskService {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
+
 
     public List<Task> getUserTasks(HttpServletRequest request) {
         User user = getUserFromRequest(request);
@@ -44,6 +50,7 @@ public class TaskService {
         Task savedTask = taskRepository.save(task);
         notificationService.scheduleNotification(savedTask); // NEW: Schedule notification
         return savedTask;
+
     }
 
     public Task updateTask(Long taskId, Task updatedTask, HttpServletRequest request) {
@@ -51,7 +58,7 @@ public class TaskService {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
 
-        if (!task.getUser().getId().equals(user.getId())) {
+        if (!task.getUser().getUser_id().equals(user.getUser_id())) {
             throw new RuntimeException("Unauthorized to update this task");
         }
 
@@ -65,6 +72,7 @@ public class TaskService {
         Task savedTask = taskRepository.save(task);
         notificationService.scheduleNotification(savedTask);
         return savedTask;
+
     }
 
     public void deleteTask(Long taskId, HttpServletRequest request) {
@@ -72,10 +80,11 @@ public class TaskService {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
 
-        if (!task.getUser().getId().equals(user.getId())) {
+        if (!task.getUser().getUser_id().equals(user.getUser_id())) {
             throw new RuntimeException("Unauthorized to delete this task");
-        }
-
+        }// delete dependent records first
+        notificationService.deleteNotification(task);
         taskRepository.delete(task);
     }
 }
+

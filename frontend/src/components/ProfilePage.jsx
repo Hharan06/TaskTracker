@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import NotificationDropdown from "./NotificationDropdown";
 
 function parseJwt(token) {
   if (!token) return null;
@@ -60,12 +61,18 @@ function ProfilePage({ token, onLogout }) {
           <div className="collapse navbar-collapse" id="navbarNav">
             <ul className="navbar-nav me-auto">
               <li className="nav-item">
-                <Link className="nav-link" to="/">Home</Link>
+                <Link className="nav-link " aria-current="page" to="/">Home</Link>
               </li>
               <li className="nav-item">
-                <Link className="nav-link active" aria-current="page" to="/profile">Profile</Link>
+                <Link className="nav-link active" to="/profile">Profile</Link>
               </li>
+              <li className="nav-item">
+                <Link className="nav-link" to="/tasks">Tasks</Link>
+              </li>
+
+              {/* Add more nav items as needed */}
             </ul>
+            <NotificationDropdown/>
             <button onClick={onLogout} className="btn btn-outline-danger ms-lg-3 mt-2 mt-lg-0">Logout</button>
           </div>
         </div>
