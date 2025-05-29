@@ -62,7 +62,7 @@ public class NotificationService {
         log.info("Scheduling notification: {} | Added to Redis: {}", payload, added);
     }
 
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 3000)
     public void processDueNotifications() {
         long now = System.currentTimeMillis();
         ZSetOperations<String, Object> zSetOps = redisTemplate.opsForZSet();

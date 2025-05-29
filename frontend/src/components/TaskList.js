@@ -39,6 +39,9 @@ const TaskList = ({onLogout}) => {
     const [isClosing, setIsClosing] = useState(false);
     const [filter, setFilter] = useState(null);
     const [enableDueDate, setEnableDueDate] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editTaskId, setEditTaskId] = useState(null);
+
     const [newTask, setNewTask] = useState({
         title: '',
         description: '',
@@ -408,7 +411,25 @@ const TaskList = ({onLogout}) => {
                             )}
 
                             <p><strong>Start Date :</strong>{new Date(selectedTask.startDateTime).toLocaleDateString()}</p>
-                            {/* Add more details as needed */}
+                            <button
+                                onClick={() => {
+                                    setNewTask({
+                                        title: selectedTask.title,
+                                        description: selectedTask.description,
+                                        startDateTime: selectedTask.startDateTime,
+                                        dueDateTime: selectedTask.dueDateTime || '',
+                                        status: selectedTask.status,
+                                        priority: selectedTask.priority,
+                                    });
+                                    setEditTaskId(selectedTask.task_id);
+                                    setIsEditMode(true);
+                                    setShowAddForm(true);
+                                }}
+                            >
+                                Edit
+                            </button>
+
+
                         </>
                     )}
                 </div>
@@ -425,7 +446,7 @@ const TaskList = ({onLogout}) => {
                             >
                                 ×
                             </button>
-                            <h3>Add New Task</h3>
+                            <h3>{isEditMode ? 'Edit Task' : 'Add New Task'}</h3>
                             <div className="form-group">
                                 <label>Task Name</label>
                                 <input
@@ -547,20 +568,47 @@ const TaskList = ({onLogout}) => {
                                 onClick={async () => {
                                     try {
                                         const token = localStorage.getItem('token');
-                                        const response = await axios.post(
-                                            'http://localhost:8080/api/tasks',
-                                            {
-                                                ...newTask,
-                                                user: null, // or remove if not needed, your backend may handle user
-                                            },
-                                            {
-                                                headers: {
-                                                    Authorization: `Bearer ${token}`,
+
+                                        if (isEditMode) {
+                                            // PUT request
+                                            const response = await axios.put(
+                                                `http://localhost:8080/api/tasks/${editTaskId}`,
+                                                {
+                                                    ...newTask,
+                                                    user: null,
                                                 },
-                                            }
-                                        );
-                                        setTasks([...tasks, response.data]);
+                                                {
+                                                    headers: {
+                                                        Authorization: `Bearer ${token}`,
+                                                    },
+                                                }
+                                            );
+
+                                            // Update task in UI
+                                            setTasks((prev) =>
+                                                prev.map((task) => (task.task_id === editTaskId ? response.data : task))
+                                            );
+                                        } else {
+                                            // POST request
+                                            const response = await axios.post(
+                                                'http://localhost:8080/api/tasks',
+                                                {
+                                                    ...newTask,
+                                                    user: null,
+                                                },
+                                                {
+                                                    headers: {
+                                                        Authorization: `Bearer ${token}`,
+                                                    },
+                                                }
+                                            );
+                                            setTasks([...tasks, response.data]);
+                                        }
+
+                                        // Reset form
                                         setShowAddForm(false);
+                                        setIsEditMode(false);
+                                        setEditTaskId(null);
                                         setNewTask({
                                             title: '',
                                             description: '',
@@ -570,12 +618,13 @@ const TaskList = ({onLogout}) => {
                                             priority: 'MEDIUM',
                                         });
                                     } catch (error) {
-                                        console.error('Failed to add task:', error);
+                                        console.error('Failed to submit task:', error);
                                     }
                                 }}
                             >
-                                Add Task
+                                {isEditMode ? 'Update Task' : 'Add Task'}
                             </button>
+
                         </div>
                     </div>
                 )}
