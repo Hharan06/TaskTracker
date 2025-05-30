@@ -5,6 +5,7 @@ import com.hr.TaskTracker.model.User;
 import com.hr.TaskTracker.repository.TaskRepository;
 import com.hr.TaskTracker.repository.UserRepository;
 import com.hr.TaskTracker.security.JwtUtil;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import com.hr.TaskTracker.repository.NotificationRepository;
 import com.hr.TaskTracker.service.NotificationService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class TaskService {
@@ -41,13 +43,21 @@ public class TaskService {
 
     public List<Task> getUserTasks(HttpServletRequest request) {
         User user = getUserFromRequest(request);
-        return taskRepository.findByUser(user);
+        return taskRepository.findAllByUserOrCollaborator(user);
     }
 
     public Task createTask(Task task, HttpServletRequest request) {
         User user = getUserFromRequest(request);
         task.setUser(user);
+        if (task.getCollaborators() != null) {
+            List<User> validCollaborators = task.getCollaborators().stream()
+                    .map(collaborator -> userRepository.findById(collaborator.getUser_id())
+                            .orElseThrow(() -> new EntityNotFoundException("User not found: " + collaborator.getUser_id())))
+                    .collect(Collectors.toList());
+            task.setCollaborators(validCollaborators);
+        }
         Task savedTask = taskRepository.save(task);
+
         notificationService.scheduleNotification(savedTask); // NEW: Schedule notification
         return savedTask;
 

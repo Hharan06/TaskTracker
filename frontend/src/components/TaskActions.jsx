@@ -2,10 +2,14 @@ import React from 'react';
 import "./TaskList.css";
 
 const TaskActions = ({
-    showSortPopup, setShowSortPopup,
-    sortField, setSortField,
-    isClosing, setIsClosing
-}) => (
+                         showFilterPopup, setShowFilterPopup,
+                         filter, setFilter,
+                         hoveredFilter, setHoveredFilter,
+                         showSortPopup, setShowSortPopup,
+                         sortField, setSortField,
+                         isClosing, setIsClosing,
+                         handleFilter
+                     }) => (
     <div className="task-actions">
         <div className="sort-button-wrapper" style={{ position: 'relative', display: 'inline-block' }}>
             <button

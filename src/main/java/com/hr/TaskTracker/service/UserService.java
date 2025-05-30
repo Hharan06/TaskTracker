@@ -66,4 +66,9 @@ public class UserService {
 
         userRepository.delete(user);
     }
+
+    public List<User> searchUsers(String query) {
+        return userRepository.searchByUsername(query);
+    }
+
 }

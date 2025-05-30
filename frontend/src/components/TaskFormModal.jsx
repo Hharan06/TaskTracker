@@ -2,6 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import './TaskList.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import CollaboratorSelector from "./CollaboratorSelector";
 
 
 const TaskFormModal = ({
@@ -27,11 +28,12 @@ const TaskFormModal = ({
     const handleSubmit = async () => {
         try {
             const token = localStorage.getItem('token');
+            const collaboratorsFormatted = newTask.collaborators.map(id => ({ user_id: id }));
             if (isEditMode) {
                 // Update existing task
                 const response = await axios.put(
                     `http://localhost:8080/api/tasks/${editTaskId}`,
-                    { ...newTask, user: null },
+                    { ...newTask, user: null,collaborators: collaboratorsFormatted  },
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
                 setTasks(prev =>
@@ -41,7 +43,7 @@ const TaskFormModal = ({
                 // Add new task
                 const response = await axios.post(
                     'http://localhost:8080/api/tasks',
-                    { ...newTask, user: null },
+                    { ...newTask, user: null,collaborators: collaboratorsFormatted },
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
                 setTasks([...tasks, response.data]);
@@ -57,6 +59,7 @@ const TaskFormModal = ({
                 dueDateTime: '',
                 status: 'TODO',
                 priority: 'MEDIUM',
+                collaborators: []
             });
         } catch (error) {
             console.error('Failed to submit task:', error);
@@ -208,6 +211,14 @@ const TaskFormModal = ({
                             </button>
                         </div>
                     </div>
+                    <div className="form-group">
+                        <label>Collaborators</label>
+                        <CollaboratorSelector
+                            selectedUserIds={newTask.collaborators}
+                            onChange={ids => setNewTask({ ...newTask, collaborators: ids })}
+                        />
+                    </div>
+
                 </div>
                 <button className="add-task-btn" onClick={handleSubmit}>
                     {isEditMode ? 'Update Task' : 'Add Task'}

@@ -79,12 +79,12 @@ function ProfilePage({ token, onLogout }) {
       </nav>
 
       {/* Profile Card */}
-      <div className="container min-vh-100 d-flex justify-content-center mt-5">
+      <div className="container min-vh-100 d-flex justify-content-center align-items-start">
         <div className="row w-100">
           <div className="col-md-6 col-lg-4 mx-auto">
             <div className="card shadow-sm">
               <div className="card-body">
-                <h2 className="mb-4 text-center">Profile</h2>
+                <h2 className="mb-1 text-center">Profile</h2>
                 {message && (
                   <div className="alert alert-danger text-center">{message}</div>
                 )}

@@ -8,21 +8,25 @@ import TaskColumns from './TaskColumns';
 import TrashDropArea from './TrashDropArea';
 import TaskFormModal from "./TaskFormModal";
 import './TaskList.css';
-import { FaPlus } from "react-icons/fa";
+import {FaPlus} from "react-icons/fa";
 
 const priorityOrder = { HIGH: 1, MEDIUM: 2, LOW: 3 };
 const statuses = ['TODO', 'IN_PROGRESS', 'DONE'];
 const statusLabels = { TODO: 'To Do', IN_PROGRESS: 'In Progress', DONE: 'Done' };
 
 const TaskList = ({ onLogout }) => {
+    const [showFilterPopup, setShowFilterPopup] = useState(false);
+    const [filterBy, setFilterBy] = useState(null);
+    const [hoveredFilter, setHoveredFilter] = useState(null);
     const [showSortPopup, setShowSortPopup] = useState(false);
     const [sortField, setSortField] = useState('priority');
     const [tasks, setTasks] = useState([]);
     const [selectedTask, setSelectedTask] = useState(null);
     const [showAddForm, setShowAddForm] = useState(false);
     const [isClosing, setIsClosing] = useState(false);
+    const [filter, setFilter] = useState(null);
 
-    // For add/edit modals
+    // For add/edit modals (not shown in your snippet, but referenced)
     const [enableDueDate, setEnableDueDate] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editTaskId, setEditTaskId] = useState(null);
@@ -36,6 +40,11 @@ const TaskList = ({ onLogout }) => {
     });
     const [showStartPicker, setShowStartPicker] = useState(false);
     const [showDuePicker, setShowDuePicker] = useState(false);
+
+    const handleFilter = (filterType) => {
+        setFilter(filterType);
+        setShowFilterPopup(false);
+    };
 
     const fetchTasks = async () => {
         try {
@@ -51,8 +60,37 @@ const TaskList = ({ onLogout }) => {
 
     useEffect(() => { fetchTasks(); }, []);
 
+    // Date calculations for filtering
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    const nextWeekStart = new Date(endOfWeek);
+    nextWeekStart.setDate(endOfWeek.getDate() + 1);
+    const nextWeekEnd = new Date(nextWeekStart);
+    nextWeekEnd.setDate(nextWeekStart.getDate() + 6);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const nextMonthEnd = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+
+    const filteredTasks = tasks.filter(task => {
+        let dueDate = null;
+        if (task.dueDateTime) dueDate = new Date(task.dueDateTime);
+        if (!dueDate || isNaN(dueDate.getTime())) return true;
+        switch (filter) {
+            case 'this_week': return dueDate >= startOfWeek && dueDate <= endOfWeek;
+            case 'next_week': return dueDate >= nextWeekStart && dueDate <= nextWeekEnd;
+            case 'this_month': return dueDate >= startOfMonth && dueDate <= endOfMonth;
+            case 'next_month': return dueDate >= nextMonthStart && dueDate <= nextMonthEnd;
+            default: return true;
+        }
+    });
+
     const groupedTasks = statuses.reduce((acc, status) => {
-        const tasksInStatus = tasks.filter(task => task.status === status);
+        const tasksInStatus = filteredTasks.filter(task => task.status === status);
         const sortedTasks = [...tasksInStatus].sort((a, b) => {
             if (sortField === 'priority') {
                 return priorityOrder[a.priority] - priorityOrder[b.priority];
@@ -120,12 +158,19 @@ const TaskList = ({ onLogout }) => {
             <div className="container mt-4 m-1">
                 <h1 className="mb-4">Your Tasks</h1>
                 <TaskActions
+                    showFilterPopup={showFilterPopup}
+                    setShowFilterPopup={setShowFilterPopup}
+                    filter={filter}
+                    setFilter={setFilter}
+                    hoveredFilter={hoveredFilter}
+                    setHoveredFilter={setHoveredFilter}
                     showSortPopup={showSortPopup}
                     setShowSortPopup={setShowSortPopup}
                     sortField={sortField}
                     setSortField={setSortField}
                     isClosing={isClosing}
                     setIsClosing={setIsClosing}
+                    handleFilter={handleFilter}
                 />
                 <DragDropContext onDragEnd={onDragEnd}>
                     <TaskColumns
@@ -142,14 +187,14 @@ const TaskList = ({ onLogout }) => {
                             setNewTask({
                                 title: '',
                                 description: '',
-                                startDateTime: new Date().toISOString().slice(0, 16),
+                                startDateTime: new Date().toISOString().slice(0, 16), // format: 'YYYY-MM-DDTHH:mm'
                                 dueDateTime: '',
                                 status: 'TODO',
                                 priority: 'MEDIUM',
                             });
-                            setIsEditMode(false);
+                            setIsEditMode(false); // Ensure it's not in edit mode
                             setEditTaskId(null);
-                            setEnableDueDate(false);
+                            setEnableDueDate(false); // Optional: reset due date toggle
                         }}
                     >
                         <FaPlus size={28} color="#fff" />
@@ -172,7 +217,9 @@ const TaskList = ({ onLogout }) => {
                         setTasks={setTasks}
                         tasks={tasks}
                     />
+
                 </DragDropContext>
+
 
                 <div
                     className={`bottom-sheet-overlay ${selectedTask ? 'open' : ''}`}
@@ -187,6 +234,7 @@ const TaskList = ({ onLogout }) => {
                     setShowAddForm={setShowAddForm}
                     statusLabels={statusLabels}
                 />
+
             </div>
         </div>
     );

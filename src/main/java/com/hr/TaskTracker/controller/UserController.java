@@ -38,4 +38,17 @@ public class UserController {
         userService.deleteUser(id);
         return ResponseEntity.ok("User deleted");
     }
+
+    // UserController.java
+    @GetMapping("/search")
+    public ResponseEntity<List<UserSearchResponse>> searchUsers(@RequestParam("query") String query) {
+        List<User> users = userService.searchUsers(query);
+        List<UserSearchResponse> results = users.stream()
+                .map(u -> new UserSearchResponse(u.getUser_id(), u.getUsername()))
+                .toList();
+        return ResponseEntity.ok(results);
+    }
+
+    public record UserSearchResponse(Long user_id, String username) {}
+
 }

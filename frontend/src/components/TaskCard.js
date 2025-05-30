@@ -27,8 +27,8 @@ function TaskCard({ task, onClick }) {
                 {task.dueDateTime && (
                     <p className="task-date"><strong>Due</strong>: {new Date(task.dueDateTime).toLocaleDateString()} @ {new Date(task.dueDateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit',hour12:true })}</p>
                 )}
-
                 <p className="task-date"><strong>Start at</strong>: {new Date(task.startDateTime).toLocaleDateString()} @ {new Date(task.startDateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit',hour12:true })}</p>
+                <p className="task-date"><strong>Created by</strong>: {task.user.username}</p>
             </div>
         </div>
     );

@@ -94,6 +94,7 @@ public class NotificationService {
 
                 notificationRepository.save(notification);
 
+
                 zSetOps.remove(NOTIFICATION_QUEUE, obj);
                 log.info("Processed and removed notification: {}", payload);
             }
